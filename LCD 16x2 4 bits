@@ -26,7 +26,6 @@
 #define BSP_GPIO_LCD_EN_PIN		11
 
 
-
 void initGPIO(void)
 {
   // Configure GPIO pins
@@ -110,6 +109,26 @@ void Lcd_DataWrite(char data)
 	delay(10000);
 }
 
+void LCD_init()
+{
+	Lcd_CmdWrite(0x02);                   // Initialize Lcd in 4-bit mode
+	Lcd_CmdWrite(0x28);                   // enable 5x7 mode for chars
+	Lcd_CmdWrite(0x0E);                   // Display OFF, Cursor ON
+	Lcd_CmdWrite(0x01);                   // Clear Display
+	Lcd_CmdWrite(0x80);                   // Move the cursor to beginning of first line
+}
+
+
+Lcd_StringWrite(char string[16])
+{
+	char i;
+	for(i=0;string[i]!=0;i++)
+	    {
+			Lcd_DataWrite(string[i]);
+	    }
+	Lcd_CmdWrite(0xc0);
+}
+
 int main()
 {
 	// Chip errata
@@ -118,35 +137,11 @@ int main()
 	// Initializations
 	initGPIO();
 
-	char i,a[]={"Good morning!"};
+	// Initialise LCD
+	LCD_init();
 
-    
+	Lcd_StringWrite("EFM32 Zero Gecko");
 
-    Lcd_CmdWrite(0x02);                   // Initialize Lcd in 4-bit mode
-    Lcd_CmdWrite(0x28);                   // enable 5x7 mode for chars
-    Lcd_CmdWrite(0x0E);                   // Display OFF, Cursor ON
-    Lcd_CmdWrite(0x01);                   // Clear Display
-    Lcd_CmdWrite(0x80);                   // Move the cursor to beginning of first line
-
-    Lcd_DataWrite('H');
-    Lcd_DataWrite('e');
-    Lcd_DataWrite('l');
-    Lcd_DataWrite('l');
-    Lcd_DataWrite('o');
-    Lcd_DataWrite(' ');
-    Lcd_DataWrite('w');
-    Lcd_DataWrite('o');
-    Lcd_DataWrite('r');
-    Lcd_DataWrite('l');
-    Lcd_DataWrite('d');
-
-    Lcd_CmdWrite(0xc0);
-
-    //for(i=0;a[i]!=0;i++)
-    //{
-    //    Lcd_DataWrite(a[i]);
-    //}
 
     while(1);
 }
-
