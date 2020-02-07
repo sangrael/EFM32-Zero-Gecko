@@ -1,0 +1,152 @@
+
+
+//Reference
+//https://www.exploreembedded.com/wiki/LPC2148:_LCD_Interface_4-Bit_Mode//
+
+#include "em_device.h"
+#include <stdint.h>
+#include "em_chip.h"
+#include "em_cmu.h"
+
+
+#define BSP_GPIO_LCD_D4_PORT	gpioPortD
+#define BSP_GPIO_LCD_D4_PIN		7
+#define BSP_GPIO_LCD_D5_PORT	gpioPortD
+#define BSP_GPIO_LCD_D5_PIN		6
+#define BSP_GPIO_LCD_D6_PORT	gpioPortC
+#define BSP_GPIO_LCD_D6_PIN		15
+#define BSP_GPIO_LCD_D7_PORT	gpioPortC
+#define BSP_GPIO_LCD_D7_PIN		14
+
+#define BSP_GPIO_LCD_RS_PORT	gpioPortC
+#define BSP_GPIO_LCD_RS_PIN		1
+#define BSP_GPIO_LCD_RW_PORT	gpioPortC
+#define BSP_GPIO_LCD_RW_PIN		2
+#define BSP_GPIO_LCD_EN_PORT	gpioPortB
+#define BSP_GPIO_LCD_EN_PIN		11
+
+
+
+void initGPIO(void)
+{
+  // Configure GPIO pins
+  CMU_ClockEnable(cmuClock_GPIO, true);
+
+  // Configure LCD outs as output
+  GPIO_PinModeSet(BSP_GPIO_LCD_D4_PORT, BSP_GPIO_LCD_D4_PIN, gpioModePushPull, 0);
+  GPIO_PinModeSet(BSP_GPIO_LCD_D5_PORT, BSP_GPIO_LCD_D5_PIN, gpioModePushPull, 0);
+  GPIO_PinModeSet(BSP_GPIO_LCD_D6_PORT, BSP_GPIO_LCD_D6_PIN, gpioModePushPull, 0);
+  GPIO_PinModeSet(BSP_GPIO_LCD_D7_PORT, BSP_GPIO_LCD_D7_PIN, gpioModePushPull, 0);
+
+  GPIO_PinModeSet(BSP_GPIO_LCD_RS_PORT, BSP_GPIO_LCD_RS_PIN, gpioModePushPull, 0);
+  GPIO_PinModeSet(BSP_GPIO_LCD_RW_PORT, BSP_GPIO_LCD_RW_PIN, gpioModePushPull, 0);
+  GPIO_PinModeSet(BSP_GPIO_LCD_EN_PORT, BSP_GPIO_LCD_EN_PIN, gpioModePushPull, 0);
+}
+
+
+// send 4 bits data to LCD//
+void sendNibble(char n)
+{
+
+	// clear data ports
+	GPIO_PinModeSet(BSP_GPIO_LCD_D4_PORT, BSP_GPIO_LCD_D4_PIN, gpioModePushPull, 0);
+	GPIO_PinModeSet(BSP_GPIO_LCD_D5_PORT, BSP_GPIO_LCD_D5_PIN, gpioModePushPull, 0);
+	GPIO_PinModeSet(BSP_GPIO_LCD_D6_PORT, BSP_GPIO_LCD_D6_PIN, gpioModePushPull, 0);
+	GPIO_PinModeSet(BSP_GPIO_LCD_D7_PORT, BSP_GPIO_LCD_D7_PIN, gpioModePushPull, 0);
+
+	// send nibble
+	GPIO_PinModeSet(BSP_GPIO_LCD_D4_PORT, BSP_GPIO_LCD_D4_PIN, gpioModePushPull, (n>>0x00 & 0x01));
+	GPIO_PinModeSet(BSP_GPIO_LCD_D5_PORT, BSP_GPIO_LCD_D5_PIN, gpioModePushPull, (n>>0x01 & 0x01));
+	GPIO_PinModeSet(BSP_GPIO_LCD_D6_PORT, BSP_GPIO_LCD_D6_PIN, gpioModePushPull, (n>>0x02 & 0x01));
+	GPIO_PinModeSet(BSP_GPIO_LCD_D7_PORT, BSP_GPIO_LCD_D7_PIN, gpioModePushPull, (n>>0x03 & 0x01));
+}
+
+// send command to LCD//
+void Lcd_CmdWrite(char cmd)
+{
+	//higher nibble
+	sendNibble((cmd>>0x04)&0x0F); 														// send higher nibble
+	GPIO_PinModeSet(BSP_GPIO_LCD_RS_PORT, BSP_GPIO_LCD_RS_PIN, gpioModePushPull, 0);	// low on RS
+	GPIO_PinModeSet(BSP_GPIO_LCD_RW_PORT, BSP_GPIO_LCD_RW_PIN, gpioModePushPull, 0);	// low on RW
+	GPIO_PinModeSet(BSP_GPIO_LCD_EN_PORT, BSP_GPIO_LCD_EN_PIN, gpioModePushPull, 1);	// high to low on EN
+	delay(1000);
+	GPIO_PinModeSet(BSP_GPIO_LCD_EN_PORT, BSP_GPIO_LCD_EN_PIN, gpioModePushPull, 0);
+
+	//lower nibble
+	sendNibble(cmd&0x0F); 																// send lower nibble
+	GPIO_PinModeSet(BSP_GPIO_LCD_RS_PORT, BSP_GPIO_LCD_RS_PIN, gpioModePushPull, 0);	// low on RS
+	GPIO_PinModeSet(BSP_GPIO_LCD_RW_PORT, BSP_GPIO_LCD_RW_PIN, gpioModePushPull, 0);	// low on RW
+	GPIO_PinModeSet(BSP_GPIO_LCD_EN_PORT, BSP_GPIO_LCD_EN_PIN, gpioModePushPull, 1);	// high to low on EN
+	delay(1000);
+	GPIO_PinModeSet(BSP_GPIO_LCD_EN_PORT, BSP_GPIO_LCD_EN_PIN, gpioModePushPull, 0);
+	delay(10000);
+ }
+
+// dealy function//
+void delay(int d)
+{
+  while(d>>0)
+  {
+    d--;
+  }
+}
+
+void Lcd_DataWrite(char data)
+{
+	sendNibble((data>>0x04) & 0x0F); 													// send higher nibble
+	GPIO_PinModeSet(BSP_GPIO_LCD_RS_PORT, BSP_GPIO_LCD_RS_PIN, gpioModePushPull, 1);	// high on RS
+	GPIO_PinModeSet(BSP_GPIO_LCD_RW_PORT, BSP_GPIO_LCD_RW_PIN, gpioModePushPull, 0);	// low on RW
+	GPIO_PinModeSet(BSP_GPIO_LCD_EN_PORT, BSP_GPIO_LCD_EN_PIN, gpioModePushPull, 1);	// high to low on EN
+	delay(1000);
+	GPIO_PinModeSet(BSP_GPIO_LCD_EN_PORT, BSP_GPIO_LCD_EN_PIN, gpioModePushPull, 0);
+	delay(10000);
+
+	sendNibble(data&0x0F); 																// send lower nibble
+	GPIO_PinModeSet(BSP_GPIO_LCD_RS_PORT, BSP_GPIO_LCD_RS_PIN, gpioModePushPull, 1);	// high on RS
+	GPIO_PinModeSet(BSP_GPIO_LCD_RW_PORT, BSP_GPIO_LCD_RW_PIN, gpioModePushPull, 0);	// low on RW
+	GPIO_PinModeSet(BSP_GPIO_LCD_EN_PORT, BSP_GPIO_LCD_EN_PIN, gpioModePushPull, 1);	// high to low on EN
+	delay(1000);
+	GPIO_PinModeSet(BSP_GPIO_LCD_EN_PORT, BSP_GPIO_LCD_EN_PIN, gpioModePushPull, 0);
+	delay(10000);
+}
+
+int main()
+{
+	// Chip errata
+	CHIP_Init();
+
+	// Initializations
+	initGPIO();
+
+	char i,a[]={"Good morning!"};
+
+    
+
+    Lcd_CmdWrite(0x02);                   // Initialize Lcd in 4-bit mode
+    Lcd_CmdWrite(0x28);                   // enable 5x7 mode for chars
+    Lcd_CmdWrite(0x0E);                   // Display OFF, Cursor ON
+    Lcd_CmdWrite(0x01);                   // Clear Display
+    Lcd_CmdWrite(0x80);                   // Move the cursor to beginning of first line
+
+    Lcd_DataWrite('H');
+    Lcd_DataWrite('e');
+    Lcd_DataWrite('l');
+    Lcd_DataWrite('l');
+    Lcd_DataWrite('o');
+    Lcd_DataWrite(' ');
+    Lcd_DataWrite('w');
+    Lcd_DataWrite('o');
+    Lcd_DataWrite('r');
+    Lcd_DataWrite('l');
+    Lcd_DataWrite('d');
+
+    Lcd_CmdWrite(0xc0);
+
+    //for(i=0;a[i]!=0;i++)
+    //{
+    //    Lcd_DataWrite(a[i]);
+    //}
+
+    while(1);
+}
+
