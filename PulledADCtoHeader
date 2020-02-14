@@ -28,7 +28,7 @@
 volatile uint32_t sample;
 volatile uint32_t millivolts;
 
-boolen initADCState false; // to check ADC initialised
+bool initADCState false; // to check ADC initialised
 
 
 /**************************************************************************//**
@@ -123,6 +123,15 @@ void getADCvalue(
 		initADCState = true;
 	}
 	
+	if(**aliasAddr) // check ClockEnable resistor (bool)
+	{
+		CMU_ClockEnable(cmuClock_GPIO, true);
+	}
+	
+	//initialize pins as output
+	
+}
+
 
 
 
