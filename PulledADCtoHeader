@@ -20,7 +20,6 @@
 #include "em_cmu.h"
 #include "em_adc.h"
 #include "em_gpio.h"
-
 #include <stdint.h>
 
 
@@ -28,6 +27,9 @@
 
 volatile uint32_t sample;
 volatile uint32_t millivolts;
+
+boolen initADCState false; // to check ADC initialised
+
 
 /**************************************************************************//**
  * @brief  Initialize ADC function
@@ -112,23 +114,28 @@ void GPIO_PinModeSet(GPIO_Port_TypeDef port,
   }
 }
 
+//Function called in main
+void getADCvalue(
+{
+	if(initADCState)
+	{
+		initADC();
+		initADCState = true;
+	}
+	
+
+
+
 /**************************************************************************//**
  * @brief  Main function
  *****************************************************************************/
 int main(void)
 {
+  	CHIP_Init(); 	// no need to be called
 
+  	initADC();	// inside getADCvalue
 
-
-
-
-	CHIP_Init();
-
-  initADC();
-
-
-
-  CMU_ClockEnable(cmuClock_GPIO, true);
+	CMU_ClockEnable(cmuClock_GPIO, true);
 
 	  //initalisation set as output
 	  GPIO_PinModeSet(gpioPortC, 10, gpioModePushPull, 0);
