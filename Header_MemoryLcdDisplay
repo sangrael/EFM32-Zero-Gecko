@@ -1,0 +1,103 @@
+/*
+ * memory_Lcd_Display.h
+ *
+ *  Created on: 17 Feb 2020
+ *      Author: sangraelee
+ */
+
+
+/*functions to be used in main
+
+  initMemoryLCD(); // initialise everything needed
+
+  // Output text on Memory LCD
+  printf("use this for next line \n");
+  Delay(2000); // milisecond
+  printf("Type text");
+
+  // Clear screen
+  printf("\f");
+*/
+
+
+
+
+
+#ifndef SRC_MEMORY_LCD_DISPLAY_H_
+#define SRC_MEMORY_LCD_DISPLAY_H_
+
+
+#include <stdio.h>
+#include "em_device.h"
+#include "em_cmu.h"
+#include "em_chip.h"
+#include "bsp.h"
+
+#include "display.h"
+#include "textdisplay.h"
+#include "retargettextdisplay.h"
+
+volatile uint32_t msTicks; /* counts 1ms timeTicks */
+typedef enum {FALSE = 0, TRUE} boolean; // to use _Bool
+
+
+/* Local prototypes */
+void Delay(uint32_t dlyTicks);
+
+/***************************************************************************//**
+ * @brief SysTick_Handler
+ * Interrupt Service Routine for system tick counter
+ ******************************************************************************/
+void SysTick_Handler(void)
+{
+  msTicks++;       /* increment counter necessary in Delay()*/
+}
+
+/***************************************************************************//**
+ * @brief Delays number of msTick Systicks (typically 1 ms)
+ * @param dlyTicks Number of ticks to delay
+ ******************************************************************************/
+void Delay(uint32_t dlyTicks)
+{
+  uint32_t curTicks;
+
+  curTicks = msTicks;
+  while ((msTicks - curTicks) < dlyTicks) ;
+}
+
+void initMemoryLCD()
+{
+	// Use 48MHZ HFXO as core clock frequency
+	CMU_ClockSelectSet(cmuClock_HF, cmuSelect_HFXO);
+
+	// Initialize DK board register access
+	// This demo currently only works in EBI mode
+	BSP_Init(BSP_INIT_DEFAULT);
+	BSP_LedsInit();
+
+	// Setup SysTick Timer for 10 msec interrupts
+	if (SysTick_Config(CMU_ClockFreqGet(cmuClock_CORE) / 1000)) {
+	while (1) ;
+	}
+
+	// Initialize the display module.
+	DISPLAY_Init();
+
+	  // Retarget stdio to a text display.
+	  if (RETARGET_TextDisplayInit() != TEXTDISPLAY_EMSTATUS_OK) {
+		  while (1) ;
+}
+
+
+  int toggleLED = 0;
+  int cnt, x, y;
+  bool movedown, moveright;
+
+
+
+
+  }
+
+
+
+#endif /* SRC_MEMORY_LCD_DISPLAY_H_ */
